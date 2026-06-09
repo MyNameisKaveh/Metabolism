@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>کاوشگر تعاملی مسیرهای متابولیک</title>
+    
+    <script type="text/javascript" src="https://reactome.org/DiagramJs/diagram/diagram.nocache.js"></script>
+    
+    <style>
+        body { font-family: Tahoma, Arial, sans-serif; margin: 0; background-color: #f4f4f9; }
+        .header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
+        .tabs { display: flex; justify-content: center; background: #34495e; padding: 10px; flex-wrap: wrap; }
+        .tab-btn { background: #ecf0f1; color: #2c3e50; border: none; padding: 10px 20px; margin: 5px; cursor: pointer; border-radius: 5px; font-weight: bold; transition: 0.3s; font-family: Tahoma;}
+        .tab-btn:hover, .tab-btn.active { background: #e74c3c; color: white; }
+        
+        /* کانتینری که نمودار ریکتوم دقیقاً در آن رسم می‌شود */
+        #diagramHolder { 
+            width: 90%; 
+            height: 75vh; 
+            margin: 20px auto; 
+            border: 2px solid #bdc3c7; 
+            border-radius: 10px; 
+            background: white; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
+        }
+        .desc { text-align: center; padding: 15px; color: #34495e; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>کاوشگر اختصاصی متابولیسم بیوشیمی</h2>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="changePathway('R-HSA-70171', this)">گلیکولیز (Glycolysis)</button>
+        <button class="tab-btn" onclick="changePathway('R-HSA-71403', this)">چرخه کربس (TCA Cycle)</button>
+        <button class="tab-btn" onclick="changePathway('R-HSA-71336', this)">پنتوز فسفات (PPP)</button>
+        <button class="tab-btn" onclick="changePathway('R-HSA-163200', this)">زنجیره انتقال الکترون</button>
+    </div>
+
+    <div class="desc">
+        <p>مسیر مورد نظر را انتخاب کنید. این نمودارها کاملاً تعاملی هستند.</p>
+    </div>
+
+    <div id="diagramHolder"></div>
+
+    <script>
+        let diagramViewer; // متغیری برای نگهداری ابزار رسم نمودار
+
+        // این تابع به صورت خودکار توسط کتابخانه Reactome بعد از لود شدن اجرا می‌شود
+        function onReactomeDiagramReady() {
+            diagramViewer = Reactome.Diagram.create({
+                "placeHolder": "diagramHolder", // شناسه دایو بالا
+                "width": document.getElementById('diagramHolder').clientWidth,
+                "height": document.getElementById('diagramHolder').clientHeight
+            });
+            
+            // بارگذاری مسیر پیش‌فرض (گلیکولیز)
+            diagramViewer.loadDiagram("R-HSA-70171");
+            
+            // اضافه کردن قابلیت ریسپانسیو بودن در صورت تغییر سایز صفحه
+            diagramViewer.onDiagramLoaded(function (loaded) {
+                 window.addEventListener('resize', function() {
+                     diagramViewer.resize(
+                         document.getElementById('diagramHolder').clientWidth, 
+                         document.getElementById('diagramHolder').clientHeight
+                     );
+                 });
+            });
+        }
+
+        // تابعی که با کلیک روی تب‌ها اجرا می‌شود
+        function changePathway(pathwayId, btnElement) {
+            if (diagramViewer) {
+                // لود کردن مسیر جدید روی همان بوم
+                diagramViewer.loadDiagram(pathwayId);
+            }
+
+            // تغییر استایل دکمه‌های فعال
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+        }
+    </script>
+
+</body>
+</html>
+"""
