@@ -6,43 +6,47 @@
     <script type="text/javascript" src="https://reactome.org/DiagramJs/diagram/diagram.nocache.js"></script>
     <style>
         body { font-family: Tahoma, sans-serif; background: #f4f4f9; padding: 20px; }
-        .viewer-container { width: 90%; height: 60vh; border: 2px solid #ddd; margin: 20px auto; background: white; }
+        .viewer-container { width: 90%; height: 50vh; border: 2px solid #ddd; margin: 20px auto; background: white; }
+        .tabs { text-align: center; margin-bottom: 10px; }
+        .btn { padding: 10px 20px; cursor: pointer; background: #34495e; color: white; border: none; border-radius: 5px; }
         .ai-area { width: 90%; margin: 20px auto; padding: 20px; background: #fff; border-radius: 10px; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
 
+<div class="tabs">
+    <button class="btn" onclick="loadPathway('glycolysis', 'R-HSA-70171')">گلیکولیز</button>
+    <button class="btn" onclick="loadPathway('tca', 'R-HSA-71403')">چرخه کربس</button>
+</div>
+
 <div id="diagramHolder" class="viewer-container"></div>
 
 <div class="ai-area">
-    <button onclick="askAI()">🤖 تحلیل هوشمند مسیر</button>
-    <div id="aiContent" style="margin-top: 15px; line-height: 1.6;">پاسخ پس از تحلیل نمایش داده می‌شود.</div>
+    <button class="btn" style="background:#27ae60" onclick="askAI()">🤖 تحلیل هوشمند مسیر</button>
+    <div id="aiContent" style="margin-top: 15px;">آماده دریافت سوال...</div>
 </div>
 
 <script>
-    const pathwayData = { 'glycolysis': { reactome: 'R-HSA-70171', name: 'گلیکولیز' } };
-    let currentPathKey = 'glycolysis';
-    let diagramViewer;
-
-    // بارگذاری نمودار ری‌اکتوم
-    diagramViewer = Reactome.Diagram.create({"placeHolder": "diagramHolder", "width": 800, "height": 400});
-    diagramViewer.loadDiagram(pathwayData[currentPathKey].reactome);
+    let currentPathName = 'گلیکولیز';
+    let diagramViewer = Reactome.Diagram.create({"placeHolder": "diagramHolder", "width": 800, "height": 400});
+    
+    function loadPathway(name, id) {
+        currentPathName = name;
+        diagramViewer.loadDiagram(id);
+    }
 
     async function askAI() {
-        const content = document.getElementById('aiContent');
-        content.innerText = "در حال پردازش توسط هوش مصنوعی...";
-
+        document.getElementById('aiContent').innerText = "در حال پردازش...";
         try {
-            // این آدرس به سمت سرور ورسل شما می‌رود
             const res = await fetch('/api/chat', { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: `توضیح آکادمیک مسیر ${pathwayData[currentPathKey].name}` })
+                body: JSON.stringify({ prompt: `توضیح آکادمیک مسیر ${currentPathName}` })
             });
             const data = await res.json();
-            content.innerText = data.candidates[0].content.parts[0].text;
+            document.getElementById('aiContent').innerText = data.candidates[0].content.parts[0].text;
         } catch (e) {
-            content.innerText = "خطا در ارتباط با سرور هوش مصنوعی.";
+            document.getElementById('aiContent').innerText = "خطا در برقراری ارتباط با سرور هوش مصنوعی.";
         }
     }
 </script>
