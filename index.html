@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -6,14 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>کاوشگر مسیرهای متابولیک | بیوشیمی</title>
     
-    <!-- کتابخانه Reactome -->
     <script type="text/javascript" src="https://reactome.org/DiagramJs/diagram/diagram.nocache.js"></script>
     
     <style>
         body { font-family: Tahoma, Arial, sans-serif; margin: 0; background-color: #f4f4f9; }
         .header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
         
-        /* استایل منوی انتخاب دیتابیس */
         .controls { margin-top: 15px; }
         select { padding: 8px; font-family: Tahoma; font-size: 14px; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; }
         
@@ -21,7 +18,6 @@
         .tab-btn { background: #ecf0f1; color: #2c3e50; border: none; padding: 10px 20px; margin: 5px; cursor: pointer; border-radius: 5px; font-weight: bold; transition: 0.3s; font-family: Tahoma;}
         .tab-btn:hover, .tab-btn.active { background: #e74c3c; color: white; }
         
-        /* کانتینرهای نمایشگر */
         .viewer-container { width: 90%; height: 75vh; margin: 20px auto; border: 2px solid #bdc3c7; border-radius: 10px; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow: hidden;}
         iframe { width: 100%; height: 100%; border: none; }
         
@@ -52,17 +48,13 @@
         <p>در حال نمایش مسیر از دیتابیس ساده آموزشی WikiPathways.</p>
     </div>
 
-    <!-- بخش نمایش WikiPathways -->
     <div id="wikiHolder" class="viewer-container">
-        <!-- پیش‌فرض: گلیکولیز -->
-        <iframe id="wikiFrame" src="https://classic.wikipathways.org/wpi/PathwayWidget.php?id=WP534" allowfullscreen></iframe>
+        <iframe id="wikiFrame" src="https://pathway-viewer.toolforge.org/?id=WP534" allowfullscreen></iframe>
     </div>
 
-    <!-- بخش نمایش Reactome (در ابتدا پنهان است) -->
     <div id="diagramHolder" class="viewer-container" style="display: none;"></div>
 
     <script>
-        // دیکشنری شناسه‌های هر مسیر در دو دیتابیس مختلف (مسیرهای انسانی)
         const pathwayData = {
             'glycolysis': { wiki: 'WP534', reactome: 'R-HSA-70171', name: 'گلیکولیز' },
             'tca': { wiki: 'WP78', reactome: 'R-HSA-71403', name: 'چرخه کربس' },
@@ -75,12 +67,10 @@
         let diagramViewer = null;
         let isReactomeReady = false;
 
-        // این تابع زمان آماده شدن کتابخانه Reactome فراخوانی می‌شود
         function onReactomeDiagramReady() {
             isReactomeReady = true;
         }
 
-        // تغییر منبع (WikiPathways یا Reactome)
         function changeSource() {
             currentSource = document.getElementById('dbSelect').value;
             const desc = document.getElementById('statusDesc');
@@ -93,37 +83,30 @@
             updateView();
         }
 
-        // تغییر مسیر (تب‌ها)
         function changePathway(pathKey, btnElement) {
             currentPathKey = pathKey;
-            
-            // تغییر ظاهر تب فعال
             const buttons = document.querySelectorAll('.tab-btn');
             buttons.forEach(btn => btn.classList.remove('active'));
             btnElement.classList.add('active');
-
             updateView();
         }
 
-        // بروزرسانی نقشه بر اساس انتخاب کاربر
         function updateView() {
             const wikiHolder = document.getElementById('wikiHolder');
             const reactomeHolder = document.getElementById('diagramHolder');
             const pathInfo = pathwayData[currentPathKey];
 
             if (currentSource === 'wiki') {
-                // نمایش ویکی و مخفی کردن ریکتوم
                 reactomeHolder.style.display = 'none';
                 wikiHolder.style.display = 'block';
-                document.getElementById('wikiFrame').src = `https://classic.wikipathways.org/wpi/PathwayWidget.php?id=${pathInfo.wiki}`;
+                // استفاده از لینک جدید برای بارگذاری داینامیک تب‌ها
+                document.getElementById('wikiFrame').src = `https://pathway-viewer.toolforge.org/?id=${pathInfo.wiki}`;
             } 
             else {
-                // نمایش ریکتوم و مخفی کردن ویکی
                 wikiHolder.style.display = 'none';
                 reactomeHolder.style.display = 'block';
                 
                 if (isReactomeReady) {
-                    // اگر نقشه ریکتوم هنوز ساخته نشده، آن را در کادر رسم کن
                     if (!diagramViewer) {
                         diagramViewer = Reactome.Diagram.create({
                             "placeHolder": "diagramHolder",
@@ -131,7 +114,6 @@
                             "height": reactomeHolder.clientHeight
                         });
                         
-                        // ریسپانسیو کردن ریکتوم
                         diagramViewer.onDiagramLoaded(function (loaded) {
                              window.addEventListener('resize', function() {
                                  if (reactomeHolder.style.display !== 'none') {
@@ -140,7 +122,6 @@
                              });
                         });
                     }
-                    // لود کردن نقشه جدید در ریکتوم
                     diagramViewer.loadDiagram(pathInfo.reactome);
                 } else {
                     alert("سرور Reactome در حال بارگذاری است. لطفاً چند ثانیه دیگر امتحان کنید.");
