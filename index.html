@@ -4,24 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>کاوشگر مسیرهای متابولیک | بیوشیمی</title>
-    
     <script type="text/javascript" src="https://reactome.org/DiagramJs/diagram/diagram.nocache.js"></script>
     
     <style>
         body { font-family: Tahoma, Arial, sans-serif; margin: 0; background-color: #f4f4f9; }
         .header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
-        
         .controls { margin-top: 15px; }
         select { padding: 8px; font-family: Tahoma; font-size: 14px; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; }
-        
         .tabs { display: flex; justify-content: center; background: #34495e; padding: 10px; flex-wrap: wrap; }
         .tab-btn { background: #ecf0f1; color: #2c3e50; border: none; padding: 10px 20px; margin: 5px; cursor: pointer; border-radius: 5px; font-weight: bold; transition: 0.3s; font-family: Tahoma;}
         .tab-btn:hover, .tab-btn.active { background: #e74c3c; color: white; }
-        
-        .viewer-container { width: 90%; height: 75vh; margin: 20px auto; border: 2px solid #bdc3c7; border-radius: 10px; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow: hidden;}
+        .action-bar { text-align: center; padding: 15px; }
+        .ai-btn { background: #8e44ad; color: white; padding: 12px 25px; border: none; border-radius: 25px; cursor: pointer; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .ai-btn:hover { background: #732d91; }
+        .viewer-container { width: 90%; height: 70vh; margin: 10px auto; border: 2px solid #bdc3c7; border-radius: 10px; background: white; overflow: hidden;}
         iframe { width: 100%; height: 100%; border: none; }
-        
-        .desc { text-align: center; padding: 10px; color: #34495e; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -31,104 +28,73 @@
         <div class="controls">
             <label for="dbSelect">منبع نمایش: </label>
             <select id="dbSelect" onchange="changeSource()">
-                <option value="wiki" selected>WikiPathways (ساده و آموزشی)</option>
-                <option value="reactome">Reactome (دقیق و موازنه شده)</option>
+                <option value="wiki" selected>WikiPathways (آموزشی)</option>
+                <option value="reactome">Reactome (دقیق)</option>
             </select>
         </div>
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="changePathway('glycolysis', this)">گلیکولیز (Glycolysis)</button>
-        <button class="tab-btn" onclick="changePathway('tca', this)">چرخه کربس (TCA Cycle)</button>
-        <button class="tab-btn" onclick="changePathway('ppp', this)">پنتوز فسفات (PPP)</button>
+        <button class="tab-btn active" onclick="changePathway('glycolysis', this)">گلیکولیز</button>
+        <button class="tab-btn" onclick="changePathway('tca', this)">چرخه کربس</button>
+        <button class="tab-btn" onclick="changePathway('ppp', this)">پنتوز فسفات</button>
         <button class="tab-btn" onclick="changePathway('etc', this)">زنجیره انتقال الکترون</button>
     </div>
 
-    <div class="desc" id="statusDesc">
-        <p>در حال نمایش مسیر از دیتابیس ساده آموزشی WikiPathways.</p>
+    <div class="action-bar">
+        <button class="ai-btn" onclick="openAI()">🤖 پرسش از هوش مصنوعی درباره این مسیر</button>
     </div>
 
     <div id="wikiHolder" class="viewer-container">
         <iframe id="wikiFrame" src="https://pathway-viewer.toolforge.org/?id=WP534" allowfullscreen></iframe>
     </div>
-
     <div id="diagramHolder" class="viewer-container" style="display: none;"></div>
 
     <script>
         const pathwayData = {
-            'glycolysis': { wiki: 'WP534', reactome: 'R-HSA-70171', name: 'گلیکولیز' },
-            'tca': { wiki: 'WP78', reactome: 'R-HSA-71403', name: 'چرخه کربس' },
-            'ppp': { wiki: 'WP400', reactome: 'R-HSA-71336', name: 'پنتوز فسفات' },
+            'glycolysis': { wiki: 'WP534', reactome: 'R-HSA-70171', name: 'گلیکولیز (Glycolysis)' },
+            'tca': { wiki: 'WP78', reactome: 'R-HSA-71403', name: 'چرخه کربس (TCA Cycle)' },
+            'ppp': { wiki: 'WP400', reactome: 'R-HSA-71336', name: 'پنتوز فسفات (PPP)' },
             'etc': { wiki: 'WP111', reactome: 'R-HSA-163200', name: 'زنجیره انتقال الکترون' }
         };
 
         let currentPathKey = 'glycolysis';
         let currentSource = 'wiki';
         let diagramViewer = null;
-        let isReactomeReady = false;
 
-        function onReactomeDiagramReady() {
-            isReactomeReady = true;
+        function openAI() {
+            const pathName = pathwayData[currentPathKey].name;
+            const prompt = `من در حال مطالعه مسیر بیوشیمیایی "${pathName}" هستم. لطفاً به صورت دقیق و آکادمیک، مراحل اصلی، آنزیم‌های کلیدی و نقش بیولوژیک آن را برای من توضیح بده.`;
+            window.open(`https://gemini.google.com/app?q=${encodeURIComponent(prompt)}`, '_blank');
         }
 
         function changeSource() {
             currentSource = document.getElementById('dbSelect').value;
-            const desc = document.getElementById('statusDesc');
-            
-            if (currentSource === 'wiki') {
-                desc.innerHTML = "<p>در حال نمایش مسیر از دیتابیس ساده آموزشی WikiPathways.</p>";
-            } else {
-                desc.innerHTML = "<p>در حال نمایش دیتابیس Reactome. (می‌توانید روی آنزیم‌ها کلیک یا زوم کنید).</p>";
-            }
             updateView();
         }
 
-        function changePathway(pathKey, btnElement) {
-            currentPathKey = pathKey;
-            const buttons = document.querySelectorAll('.tab-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            btnElement.classList.add('active');
+        function changePathway(key, btn) {
+            currentPathKey = key;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
             updateView();
         }
 
         function updateView() {
-            const wikiHolder = document.getElementById('wikiHolder');
-            const reactomeHolder = document.getElementById('diagramHolder');
-            const pathInfo = pathwayData[currentPathKey];
-
+            const path = pathwayData[currentPathKey];
             if (currentSource === 'wiki') {
-                reactomeHolder.style.display = 'none';
-                wikiHolder.style.display = 'block';
-                // استفاده از لینک جدید برای بارگذاری داینامیک تب‌ها
-                document.getElementById('wikiFrame').src = `https://pathway-viewer.toolforge.org/?id=${pathInfo.wiki}`;
-            } 
-            else {
-                wikiHolder.style.display = 'none';
-                reactomeHolder.style.display = 'block';
-                
-                if (isReactomeReady) {
-                    if (!diagramViewer) {
-                        diagramViewer = Reactome.Diagram.create({
-                            "placeHolder": "diagramHolder",
-                            "width": reactomeHolder.clientWidth,
-                            "height": reactomeHolder.clientHeight
-                        });
-                        
-                        diagramViewer.onDiagramLoaded(function (loaded) {
-                             window.addEventListener('resize', function() {
-                                 if (reactomeHolder.style.display !== 'none') {
-                                     diagramViewer.resize(reactomeHolder.clientWidth, reactomeHolder.clientHeight);
-                                 }
-                             });
-                        });
-                    }
-                    diagramViewer.loadDiagram(pathInfo.reactome);
-                } else {
-                    alert("سرور Reactome در حال بارگذاری است. لطفاً چند ثانیه دیگر امتحان کنید.");
+                document.getElementById('diagramHolder').style.display = 'none';
+                document.getElementById('wikiHolder').style.display = 'block';
+                document.getElementById('wikiFrame').src = `https://pathway-viewer.toolforge.org/?id=${path.wiki}`;
+            } else {
+                document.getElementById('wikiHolder').style.display = 'none';
+                document.getElementById('diagramHolder').style.display = 'block';
+                if (!diagramViewer) {
+                    diagramViewer = Reactome.Diagram.create({"placeHolder": "diagramHolder", "width": 800, "height": 600});
                 }
+                diagramViewer.loadDiagram(path.reactome);
             }
         }
     </script>
-
 </body>
 </html>
