@@ -6,73 +6,43 @@
     <script type="text/javascript" src="https://reactome.org/DiagramJs/diagram/diagram.nocache.js"></script>
     <style>
         body { font-family: Tahoma, sans-serif; background: #f4f4f9; padding: 20px; }
-        .header { background: #2c3e50; color: white; padding: 20px; text-align: center; border-radius: 10px; }
-        .panel { background: white; padding: 20px; margin: 20px auto; width: 90%; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .viewer-container { width: 100%; height: 60vh; border: 2px solid #ddd; margin-top: 10px; }
-        .ai-area { margin-top: 20px; padding: 15px; background: #e8f6f3; border-radius: 10px; }
-        input, button { padding: 10px; margin: 5px; border-radius: 5px; border: 1px solid #ccc; }
-        button { background: #27ae60; color: white; border: none; cursor: pointer; }
+        .viewer-container { width: 90%; height: 60vh; border: 2px solid #ddd; margin: 20px auto; background: white; }
+        .ai-area { width: 90%; margin: 20px auto; padding: 20px; background: #fff; border-radius: 10px; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h2>کاوشگر متابولیسم با دستیار AI</h2>
-</div>
+<div id="diagramHolder" class="viewer-container"></div>
 
-<div class="panel">
-    <!-- بخش امن: دریافت کلید از کاربر -->
-    <div style="text-align: center;">
-        <input type="password" id="apiKeyInput" placeholder="API Key خود را اینجا وارد کنید">
-        <a href="https://aistudio.google.com/" target="_blank" style="font-size: 12px;">دریافت رایگان API Key</a>
-    </div>
-
-    <div class="tabs" style="text-align: center; margin: 15px;">
-        <button onclick="changePathway('glycolysis', this)">گلیکولیز</button>
-        <button onclick="changePathway('tca', this)">چرخه کربس</button>
-    </div>
-
-    <div id="diagramHolder" class="viewer-container"></div>
-
-    <div class="ai-area">
-        <button onclick="askAI()">🤖 تحلیل هوشمند مسیر</button>
-        <div id="aiContent">پاسخ در اینجا نمایش داده می‌شود...</div>
-    </div>
+<div class="ai-area">
+    <button onclick="askAI()">🤖 تحلیل هوشمند مسیر</button>
+    <div id="aiContent" style="margin-top: 15px; line-height: 1.6;">پاسخ پس از تحلیل نمایش داده می‌شود.</div>
 </div>
 
 <script>
-    const pathwayData = {
-        'glycolysis': { reactome: 'R-HSA-70171', name: 'گلیکولیز' },
-        'tca': { reactome: 'R-HSA-71403', name: 'چرخه کربس' }
-    };
+    const pathwayData = { 'glycolysis': { reactome: 'R-HSA-70171', name: 'گلیکولیز' } };
     let currentPathKey = 'glycolysis';
     let diagramViewer;
 
-    function changePathway(key, btn) {
-        currentPathKey = key;
-        if (!diagramViewer) {
-            diagramViewer = Reactome.Diagram.create({"placeHolder": "diagramHolder", "width": 800, "height": 400});
-        }
-        diagramViewer.loadDiagram(pathwayData[key].reactome);
-    }
+    // بارگذاری نمودار ری‌اکتوم
+    diagramViewer = Reactome.Diagram.create({"placeHolder": "diagramHolder", "width": 800, "height": 400});
+    diagramViewer.loadDiagram(pathwayData[currentPathKey].reactome);
 
     async function askAI() {
-        const apiKey = document.getElementById('apiKeyInput').value;
-        if (!apiKey) { alert("لطفاً API Key خود را وارد کنید"); return; }
-        
         const content = document.getElementById('aiContent');
-        content.innerText = "در حال پردازش...";
+        content.innerText = "در حال پردازش توسط هوش مصنوعی...";
 
         try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            // این آدرس به سمت سرور ورسل شما می‌رود
+            const res = await fetch('/api/chat', { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: `توضیح آکادمیک مسیر ${pathwayData[currentPathKey].name}` }] }] })
+                body: JSON.stringify({ prompt: `توضیح آکادمیک مسیر ${pathwayData[currentPathKey].name}` })
             });
             const data = await res.json();
             content.innerText = data.candidates[0].content.parts[0].text;
         } catch (e) {
-            content.innerText = "خطا: کلید وارد شده معتبر نیست.";
+            content.innerText = "خطا در ارتباط با سرور هوش مصنوعی.";
         }
     }
 </script>
